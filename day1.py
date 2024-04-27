@@ -7,3 +7,4 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 nltk.download()
+#安装语料库
