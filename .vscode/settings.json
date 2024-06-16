@@ -1,4 +1,3 @@
 {
-  "python.analysis.typeCheckingMode": "basic",
-  "python.pythonPatch": "C:/Users/Admin/.conda/envs/myenv/python.exe"
+  "python.analysis.typeCheckingMode": "basic"
 }
