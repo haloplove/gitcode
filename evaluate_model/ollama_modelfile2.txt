@@ -1,0 +1,24 @@
+# 使用本地GGUF模型文件作为基础模型
+FROM ./Yaowen-7.6B-F16.gguf
+
+
+# 设置系统提示词
+SYSTEM """你是一个友好的医学问答AI助手,我会用中文和你交谈。
+请用简洁、专业、友善的语气回答问题。
+回答要准确、实用,并注意保护用户隐私。由广东药科大学训练"""
+
+# 设置提示词模板
+TEMPLATE """{{ if .System }}
+<|im_start|>system
+{{ .System }}
+<|im_end|>
+{{ end }}
+{{ if .Prompt }}
+<|im_start|>user
+{{ .Prompt }}
+<|im_end|>
+{{ end }}
+<|im_start|>assistant
+{{ .Response }}
+<|im_end|>
+"""

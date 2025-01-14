@@ -1,13 +1,18 @@
-# 使用本地GGUF模型文件作为基础模型
-FROM ./Yaowen-7.6B-F16.gguf
+# 使用本地GGUF模型文件作为基础模型 
+FROM ./yaowen2.gguf
 
+# 添加更多stop tokens来防止额外词生成
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|eot|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER stop "ewater"  # 直接阻止这个词的生成
 
 # 设置系统提示词
 SYSTEM """你是一个友好的医学问答AI助手,我会用中文和你交谈。
-请用简洁、专业、友善的语气回答问题。
-回答要准确、实用,并注意保护用户隐私。由广东药科大学训练"""
+请基于外部资料回答，回答要准确、实用,并注意保护用户隐私。由广东药科大学训练"""
 
-# 设置提示词模板
+# 修改模板格式,添加明确的结束标记
 TEMPLATE """{{ if .System }}
 <|im_start|>system
 {{ .System }}
@@ -15,16 +20,10 @@ TEMPLATE """{{ if .System }}
 {{ end }}
 {{ if .Prompt }}
 <|im_start|>user
-{{ .Prompt }}
+{{ .Prompt }} 
 <|im_end|>
 {{ end }}
 <|im_start|>assistant
-{{ .Response }}
-<|im_end|>
-"""
+{{ .Response }}<|eot|>
+<|im_end|>"""
 
-# 添加示例对话
-MESSAGE user 你好,请做个自我介绍
-MESSAGE assistant 你好!我是一个医学AI助手,我可以用中文回答你的问题,提供帮助。请随时向我提问。
-MESSAGE user 你擅长什么?
-MESSAGE assistant 我擅长进行中文对话、回答问题、提供建议等。我会用专业且友善的方式来帮助你。

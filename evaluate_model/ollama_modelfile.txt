@@ -1,52 +1,27 @@
+# 使用 Qwen 作为基础模型
 FROM ./Yaowen-7.6B-F16.gguf
-TEMPLATE """{{- if .Messages }}
-{{- if or .System .Tools }}<|im_start|>system
-{{- if .System }}
-{{ .System }}
-{{- end }}
-{{- if .Tools }}
 
-# Tools
+# 设置温度参数为 1 [更高的值更具有创新性，更低的值更富有连贯性]
+PARAMETER temperature 1
 
-You may call one or more functions to assist with the user query.
+# 设置上下文窗口大小为 1024，这控制着 LLM 能够使用多少个 token 来生成下一个 token
+PARAMETER num_ctx 1024
 
-You are provided with function signatures within `<tools></tools>` XML tags:
-`<tools>`
-{{- range .Tools }}
-{"type": "function", "function": {{ .Function }}}
-{{- end }}
-`</tools>`
+# 限制生成的文本长度为 256 个 token
+PARAMETER num_predict 256
 
-For each function call, return a json object with function name and arguments within <tool*call></tool_call> XML tags:
-<tool_call>
-{"name": `<function-name>`, "arguments": `<args-json-object>`}
-</tool_call>
-{{- end }}<|im_end|>
-{{ end }}
-{{- range $i, $* := .Messages }}
-{{- $last := eq (len (slice $.Messages $i)) 1 -}}
-{{- if eq .Role "user" }}<|im_start|>user
-{{ .Content }}<|im_end|>
-{{ else if eq .Role "assistant" }}<|im_start|>assistant
-{{ if .Content }}{{ .Content }}
-{{- else if .ToolCalls }}<tool_call>
-{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
-{{ end }}</tool_call>
-{{- end }}{{ if not $last }}<|im_end|>
-{{ end }}
-{{- else if eq .Role "tool" }}<|im_start|>user
-<tool_response>
-{{ .Content }}
-</tool_response><|im_end|>
-{{ end }}
-{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
-{{ end }}
-{{- end }}
-{{- else }}
-{{- if .System }}<|im_start|>system
+# 设置停止序列
+PARAMETER stop "<|im_end|>"
+
+# 设置自定义系统消息以指定聊天助手的行为
+SYSTEM """
+You are a friendly medical Q&A AI assistant, and I can talk to you in Chinese. Please answer questions in a concise, professional, and friendly tone. Answers should be accurate and practical, and pay attention to protecting user privacy. Trained by Guangdong Pharmaceutical University
+"""
+
+# 定义简化的提示模板
+TEMPLATE """{{- if .System }}<|im_start|>system
 {{ .System }}<|im_end|>
-{{ end }}{{ if .Prompt }}<|im_start|>user
+{{- end }}{{ if .Prompt }}<|im_start|>user
 {{ .Prompt }}<|im_end|>
-{{ end }}<|im_start|>assistant
-{{ end }}{{ .Response }}{{ if .Response }}<|im_end|>{{ end }}"""
-SYSTEM 你是药问 1，由广东药科大学创建，你是医学问答助手。
+{{- end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>"""
